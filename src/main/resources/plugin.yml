@@ -1,0 +1,9 @@
+name: Lobby
+version: '${project.version}'
+main: vip.marcel.gamestarbro.lobby.Lobby
+api-version: 1.15
+authors: [ VIPMarcel ]
+description: the official lobby system for gamestarbro
+
+depend:
+  - ProtocolLib
