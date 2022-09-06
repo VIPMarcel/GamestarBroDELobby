@@ -1,25 +1,32 @@
 package vip.marcel.gamestarbro.lobby;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import vip.marcel.gamestarbro.lobby.listeners.AsyncPlayerChatListener;
-import vip.marcel.gamestarbro.lobby.listeners.PlayerJoinListener;
-import vip.marcel.gamestarbro.lobby.listeners.PlayerQuitListener;
+import vip.marcel.gamestarbro.lobby.commands.*;
+import vip.marcel.gamestarbro.lobby.listeners.*;
+import vip.marcel.gamestarbro.lobby.utils.ItemHandler;
 import vip.marcel.gamestarbro.lobby.utils.builders.HologramBuilder;
 import vip.marcel.gamestarbro.lobby.utils.builders.ItemBuilder;
-import vip.marcel.gamestarbro.lobby.utils.builders.ScoreboardBuilder;
 import vip.marcel.gamestarbro.lobby.utils.colorflowmessage.ColorFlowMessageBuilder;
 import vip.marcel.gamestarbro.lobby.utils.config.DatabaseConfiguration;
 import vip.marcel.gamestarbro.lobby.utils.config.LocationConfiguration;
 import vip.marcel.gamestarbro.lobby.utils.database.DatabasePlayers;
 import vip.marcel.gamestarbro.lobby.utils.database.MySQL;
+import vip.marcel.gamestarbro.lobby.utils.jumpandrun.JumpAndRunGame;
+import vip.marcel.gamestarbro.lobby.utils.jumpandrun.JumpAndRunMoveListener;
 import vip.marcel.gamestarbro.lobby.utils.locations.LocationExecutor;
 import vip.marcel.gamestarbro.lobby.utils.mojang.ReflectionUtil;
 import vip.marcel.gamestarbro.lobby.utils.mojang.UUIDFetcher;
+import vip.marcel.gamestarbro.lobby.utils.placeholders.NetworkExpansions;
+
+import java.util.List;
+import java.util.Map;
 
 public final class Lobby extends JavaPlugin {
 
@@ -27,6 +34,10 @@ public final class Lobby extends JavaPlugin {
     private final String globalPrefix = "§8§l┃ §6GamestarBro §8► §7";
     private final String noPermissions = "§cDu hast keinen Zugriff auf diesen Befehl.";
     private final String unknownCommand = "§cDieser Befehl existiert nicht.";
+
+    private List<Player> editMode, flyMode, setupJnRCooldown;
+
+    private Map<Player, Integer> setupJnR;
 
     private UUIDFetcher uuidFetcher;
     private ReflectionUtil reflectionUtil;
@@ -40,6 +51,10 @@ public final class Lobby extends JavaPlugin {
     private DatabasePlayers databasePlayers;
 
     private LocationExecutor locationExecutor;
+
+    private JumpAndRunGame jumpAndRunGame;
+
+    private ItemHandler itemHandler;
 
     @Override
     public void onEnable() {
@@ -56,6 +71,12 @@ public final class Lobby extends JavaPlugin {
     }
 
     private void init() {
+        this.editMode = Lists.newArrayList();
+        this.flyMode = Lists.newArrayList();
+        this.setupJnRCooldown = Lists.newArrayList();
+
+        this.setupJnR = Maps.newHashMap();
+
         this.uuidFetcher = new UUIDFetcher(this);
         this.reflectionUtil = new ReflectionUtil(this);
 
@@ -69,12 +90,49 @@ public final class Lobby extends JavaPlugin {
         this.databasePlayers = new DatabasePlayers(this);
 
         this.locationExecutor = new LocationExecutor(this);
+        this.jumpAndRunGame = new JumpAndRunGame(this);
+
+        this.itemHandler = new ItemHandler(this);
+
+        new NetworkExpansions(this).register();
 
         final PluginManager pluginManager = Bukkit.getPluginManager();
 
+        pluginManager.registerEvents(new BlockBreakListener(this), this);
+        pluginManager.registerEvents(new BlockBurnListener(this), this);
+        pluginManager.registerEvents(new BlockPhysicsListener(this), this);
+        pluginManager.registerEvents(new BlockPlaceListener(this), this);
+        pluginManager.registerEvents(new CraftItemListener(this), this);
+        pluginManager.registerEvents(new EntityChangeBlockListener(this), this);
+        pluginManager.registerEvents(new EntityDamageListener(this), this);
+        pluginManager.registerEvents(new FoodLevelChangeListener(this), this);
+        pluginManager.registerEvents(new HangingBreakListener(this), this);
+        pluginManager.registerEvents(new HangingPlaceListener(this), this);
+        // inv click
+        pluginManager.registerEvents(new LeavesDecayListener(this), this);
+        pluginManager.registerEvents(new PlayerArmorStandManipulateListener(this), this);
+        pluginManager.registerEvents(new PlayerBedEnterListener(this), this);
+        pluginManager.registerEvents(new PlayerBucketEmptyListener(this), this);
+        pluginManager.registerEvents(new PlayerBucketFillListener(this), this);
+        pluginManager.registerEvents(new PlayerDropItemListener(this), this);
+        // interact entity
+        pluginManager.registerEvents(new PlayerInteractListener(this), this);
+        pluginManager.registerEvents(new PlayerItemHeldListener(this), this);
+        pluginManager.registerEvents(new PlayerPickupItemListener(this), this);
         pluginManager.registerEvents(new PlayerJoinListener(this), this);
         pluginManager.registerEvents(new PlayerQuitListener(this), this);
-        pluginManager.registerEvents(new AsyncPlayerChatListener(this), this);
+        pluginManager.registerEvents(new PlayerShearEntityListener(this), this);
+        pluginManager.registerEvents(new PlayerSwapHandItemsListener(this), this);
+        pluginManager.registerEvents(new PlayerUnleashEntityListener(this), this);
+        pluginManager.registerEvents(new WeatherChangeListener(this), this);
+
+        pluginManager.registerEvents(new JumpAndRunMoveListener(this), this);
+
+        getCommand("crash").setExecutor(new CrashCommand(this));
+        getCommand("edit").setExecutor(new EditCommand(this));
+        getCommand("fly").setExecutor(new FlyCommand(this));
+        getCommand("setposition").setExecutor(new SetPositionCommand(this));
+        getCommand("setupjnr").setExecutor(new SetupJnRCommand(this));
 
     }
 
@@ -110,12 +168,44 @@ public final class Lobby extends JavaPlugin {
         return new ItemBuilder(this, type, amount, damage);
     }
 
-    public ScoreboardBuilder scoreboardBuilder() {
-        return new ScoreboardBuilder(this);
+    public String getSimpleTimeString(long seconds) {
+        String time;
+
+        if(seconds == 1) {
+            time = "1 Sekunde";
+        } else if(seconds < 60) {
+            time = seconds + " Sekunden";
+        } else if(seconds >= 60 && seconds < 120) {
+            time = "1 Minute";
+        }  else if(seconds >= (60 * 2) && seconds < (60 * 60)) {
+            time = seconds / 60 + " Minuten";
+        }  else if(seconds >= (60 * 60 * 1) && seconds < (60 * 60 * 2)) {
+            time = seconds / 60 / 60 + " Stunde";
+        }  else if(seconds >= (60 * 60 * 2) && seconds < (60 * 60 * 24)) {
+            time = seconds / 60 / 60 + " Stunden";
+        }  else if(seconds >= (60 * 60 * 24) && seconds < (60 * 60 * (24 * 2))) {
+            time = seconds / 60 / 60 / 24 + " Tag";
+        } else {
+            time = seconds / 60 / 60 / 24 + " Tage";
+        }
+
+        return time;
     }
 
-    public ScoreboardBuilder scoreboard(Player player) {
-        return new ScoreboardBuilder(this, player);
+    public List<Player> getEditMode() {
+        return this.editMode;
+    }
+
+    public List<Player> getFlyMode() {
+        return this.flyMode;
+    }
+
+    public List<Player> getSetupJnRCooldown() {
+        return this.setupJnRCooldown;
+    }
+
+    public Map<Player, Integer> getSetupJnR() {
+        return this.setupJnR;
     }
 
     public UUIDFetcher getUUIDFetcher() {
@@ -148,6 +238,14 @@ public final class Lobby extends JavaPlugin {
 
     public LocationExecutor getLocationExecutor() {
         return this.locationExecutor;
+    }
+
+    public JumpAndRunGame getJumpAndRunGame() {
+        return this.jumpAndRunGame;
+    }
+
+    public ItemHandler getItemHandler() {
+        return this.itemHandler;
     }
 
 }

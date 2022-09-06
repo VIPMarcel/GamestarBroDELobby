@@ -7,3 +7,20 @@ description: the official lobby system for gamestarbro
 
 depend:
   - ProtocolLib
+
+softdepend:
+  - PlaceholderAPI
+
+commands:
+  crash:
+    description: crash a player
+  edit:
+    description: edit the lobby
+  fly:
+    description: enable or disable fly mode
+  setposition:
+    description: set teleport position
+    aliases:
+      - setpos
+  setupjnr:
+    description: setup the jump and run

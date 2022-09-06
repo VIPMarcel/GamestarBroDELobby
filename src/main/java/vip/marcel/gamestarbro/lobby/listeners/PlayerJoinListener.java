@@ -8,13 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import vip.marcel.gamestarbro.lobby.Lobby;
 
-public class PlayerJoinListener implements Listener {
-
-    private final Lobby plugin;
-
-    public PlayerJoinListener(Lobby plugin) {
-        this.plugin = plugin;
-    }
+public record PlayerJoinListener(Lobby plugin) implements Listener {
 
     @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent event) {
@@ -22,6 +16,7 @@ public class PlayerJoinListener implements Listener {
 
         event.setJoinMessage(null);
 
+        player.setOp(false);
         player.setMaxHealth(4);
         player.setHealth(4);
         player.setFoodLevel(20);
@@ -45,6 +40,12 @@ public class PlayerJoinListener implements Listener {
         player.sendTitle("§8▻ §6§nGamestarBro.de§r §8◅", this.plugin.getColorFlowMessageBuilder()
                 .buildColorFlowMessage("Herzlich Willkommen!", "#CC6600", "#FFFF66"));
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 2F);
+
+        if(player.hasPermission("proxy.staff")) {
+            this.plugin.getServer().getWorld(player.getWorld().getName()).strikeLightningEffect(player.getLocation());
+        }
+
+        this.plugin.getItemHandler().giveItemsToPlayer(player);
     }
 
 }

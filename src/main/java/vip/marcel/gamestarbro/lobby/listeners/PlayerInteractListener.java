@@ -1,0 +1,52 @@
+package vip.marcel.gamestarbro.lobby.listeners;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+import vip.marcel.gamestarbro.lobby.Lobby;
+
+public record PlayerInteractListener(Lobby plugin) implements Listener {
+
+    @EventHandler
+    public void onPlayerInteractEvent(PlayerInteractEvent event) {
+        final Player player = event.getPlayer();
+
+        if(this.plugin.getEditMode().contains(player)) {
+
+            if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §7JnR §8| §aBlöcke auswählen")) {
+
+                    if(this.plugin.getSetupJnRCooldown().contains(player)) {
+                        return;
+                    }
+
+                    if(!this.plugin.getSetupJnR().containsKey(player)) {
+                        this.plugin.getSetupJnR().put(player, 1);
+                    }
+
+                    final Integer blockNumber = this.plugin.getSetupJnR().get(player);
+
+                    this.plugin.getLocationExecutor().saveLocation("JumpNRun." + blockNumber, event.getClickedBlock().getLocation());
+
+                    player.sendMessage("§8§l┃ §6Jump'n'Run §8► §7" + "§7Block §e" + blockNumber + " §7wurde gespeichert.");
+                    player.playSound(event.getClickedBlock().getLocation(), Sound.BLOCK_CANDLE_BREAK, 0.5F, 0.5F);
+
+                    this.plugin.getSetupJnR().put(player, blockNumber + 1);
+
+                    this.plugin.getSetupJnRCooldown().add(player);
+
+                    Bukkit.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+                        this.plugin.getSetupJnRCooldown().remove(player);
+                    }, 20);
+
+                }
+            }
+
+        }
+
+    }
+}
