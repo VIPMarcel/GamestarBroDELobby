@@ -10,6 +10,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import vip.marcel.gamestarbro.lobby.commands.*;
 import vip.marcel.gamestarbro.lobby.listeners.*;
+import vip.marcel.gamestarbro.lobby.utils.InventoryHandler;
 import vip.marcel.gamestarbro.lobby.utils.ItemHandler;
 import vip.marcel.gamestarbro.lobby.utils.builders.HologramBuilder;
 import vip.marcel.gamestarbro.lobby.utils.builders.ItemBuilder;
@@ -35,7 +36,7 @@ public final class Lobby extends JavaPlugin {
     private final String noPermissions = "§cDu hast keinen Zugriff auf diesen Befehl.";
     private final String unknownCommand = "§cDieser Befehl existiert nicht.";
 
-    private List<Player> editMode, flyMode, setupJnRCooldown;
+    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown;
 
     private Map<Player, Integer> setupJnR;
 
@@ -55,6 +56,7 @@ public final class Lobby extends JavaPlugin {
     private JumpAndRunGame jumpAndRunGame;
 
     private ItemHandler itemHandler;
+    private InventoryHandler inventoryHandler;
 
     @Override
     public void onEnable() {
@@ -74,6 +76,7 @@ public final class Lobby extends JavaPlugin {
         this.editMode = Lists.newArrayList();
         this.flyMode = Lists.newArrayList();
         this.setupJnRCooldown = Lists.newArrayList();
+        this.interactCooldown = Lists.newArrayList();
 
         this.setupJnR = Maps.newHashMap();
 
@@ -93,6 +96,7 @@ public final class Lobby extends JavaPlugin {
         this.jumpAndRunGame = new JumpAndRunGame(this);
 
         this.itemHandler = new ItemHandler(this);
+        this.inventoryHandler = new InventoryHandler(this);
 
         new NetworkExpansions(this).register();
 
@@ -108,7 +112,7 @@ public final class Lobby extends JavaPlugin {
         pluginManager.registerEvents(new FoodLevelChangeListener(this), this);
         pluginManager.registerEvents(new HangingBreakListener(this), this);
         pluginManager.registerEvents(new HangingPlaceListener(this), this);
-        // inv click
+        pluginManager.registerEvents(new InventoryClickListener(this), this);
         pluginManager.registerEvents(new LeavesDecayListener(this), this);
         pluginManager.registerEvents(new PlayerArmorStandManipulateListener(this), this);
         pluginManager.registerEvents(new PlayerBedEnterListener(this), this);
@@ -204,6 +208,10 @@ public final class Lobby extends JavaPlugin {
         return this.setupJnRCooldown;
     }
 
+    public List<Player> getInteractCooldown() {
+        return this.interactCooldown;
+    }
+
     public Map<Player, Integer> getSetupJnR() {
         return this.setupJnR;
     }
@@ -246,6 +254,10 @@ public final class Lobby extends JavaPlugin {
 
     public ItemHandler getItemHandler() {
         return this.itemHandler;
+    }
+
+    public InventoryHandler getInventoryHandler() {
+        return this.inventoryHandler;
     }
 
 }

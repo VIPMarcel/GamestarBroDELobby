@@ -99,6 +99,10 @@ public class JumpAndRunGame implements JumpAndRun {
             CompletableFuture.runAsync(() -> {
                 this.plugin.getDatabasePlayers().setCoins(player.getUniqueId(), this.plugin.getDatabasePlayers().getCoins(player.getUniqueId()) + 500);
             }).thenAccept(unused -> {
+                Bukkit.broadcastMessage(this.prefix + "§e" + player.getName() + " §ahat es geschafft!");
+                Bukkit.getServer().getOnlinePlayers().forEach(players -> {
+                    players.playSound(players.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 0.5F, 0.5F);
+                });
                 player.sendMessage(this.prefix + "Du hast §e500 Coins §7erhalten.");
             });
         } else {

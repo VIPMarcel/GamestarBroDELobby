@@ -46,7 +46,49 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
                 }
             }
 
+        } else {
+            // No Edit-Mode:
+
+            if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_AIR)) {
+
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §aNavigator")) {
+                    event.setCancelled(true);
+
+                    if(!hasInteractCooldown(player)) {
+                        setupCooldown(player);
+                        player.openInventory(this.plugin.getInventoryHandler().getNavigator());
+                        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.5F, 0.5F);
+                    }
+
+                }
+
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §cExtras")) {
+                    event.setCancelled(true);
+
+                    if(!hasInteractCooldown(player)) {
+                        setupCooldown(player);
+                        player.sendMessage(this.plugin.getGlobalPrefix() + "§7Diese Funktion folgt in den nächsten Tagen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_BEEHIVE_SHEAR, 0.5F, 0.5F);
+                    }
+                }
+
+            }
+
         }
 
     }
+
+    private boolean hasInteractCooldown(Player player) {
+        return this.plugin.getInteractCooldown().contains(player);
+    }
+
+    private void setupCooldown(Player player) {
+        this.plugin.getInteractCooldown().add(player);
+
+        Bukkit.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+            this.plugin.getInteractCooldown().remove(player);
+        }, 10);
+    }
+
+
 }
