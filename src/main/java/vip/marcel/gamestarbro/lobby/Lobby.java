@@ -12,11 +12,14 @@ import vip.marcel.gamestarbro.lobby.commands.*;
 import vip.marcel.gamestarbro.lobby.listeners.*;
 import vip.marcel.gamestarbro.lobby.utils.InventoryHandler;
 import vip.marcel.gamestarbro.lobby.utils.ItemHandler;
+import vip.marcel.gamestarbro.lobby.utils.battlebox.BattleBoxGame;
+import vip.marcel.gamestarbro.lobby.utils.battlebox.BattleBoxMoveListener;
 import vip.marcel.gamestarbro.lobby.utils.builders.HologramBuilder;
 import vip.marcel.gamestarbro.lobby.utils.builders.ItemBuilder;
 import vip.marcel.gamestarbro.lobby.utils.colorflowmessage.ColorFlowMessageBuilder;
 import vip.marcel.gamestarbro.lobby.utils.config.DatabaseConfiguration;
 import vip.marcel.gamestarbro.lobby.utils.config.LocationConfiguration;
+import vip.marcel.gamestarbro.lobby.utils.database.DatabaseDailyReward;
 import vip.marcel.gamestarbro.lobby.utils.database.DatabasePlayers;
 import vip.marcel.gamestarbro.lobby.utils.database.MySQL;
 import vip.marcel.gamestarbro.lobby.utils.jumpandrun.JumpAndRunGame;
@@ -26,6 +29,9 @@ import vip.marcel.gamestarbro.lobby.utils.mojang.ReflectionUtil;
 import vip.marcel.gamestarbro.lobby.utils.mojang.UUIDFetcher;
 import vip.marcel.gamestarbro.lobby.utils.placeholders.NetworkExpansions;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -50,16 +56,19 @@ public final class Lobby extends JavaPlugin {
 
     private MySQL mySQL;
     private DatabasePlayers databasePlayers;
+    private DatabaseDailyReward databaseDailyReward;
 
     private LocationExecutor locationExecutor;
 
     private JumpAndRunGame jumpAndRunGame;
+    private BattleBoxGame battleBoxGame;
 
     private ItemHandler itemHandler;
     private InventoryHandler inventoryHandler;
 
     @Override
     public void onEnable() {
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         this.init();
 
         Bukkit.getServer().getScheduler().runTaskTimer(this, () -> {
@@ -91,9 +100,12 @@ public final class Lobby extends JavaPlugin {
         this.mySQL = new MySQL(this);
         this.mySQL.connect();
         this.databasePlayers = new DatabasePlayers(this);
+        this.databaseDailyReward = new DatabaseDailyReward(this);
 
         this.locationExecutor = new LocationExecutor(this);
+
         this.jumpAndRunGame = new JumpAndRunGame(this);
+        this.battleBoxGame = new BattleBoxGame(this);
 
         this.itemHandler = new ItemHandler(this);
         this.inventoryHandler = new InventoryHandler(this);
@@ -108,6 +120,7 @@ public final class Lobby extends JavaPlugin {
         pluginManager.registerEvents(new BlockPlaceListener(this), this);
         pluginManager.registerEvents(new CraftItemListener(this), this);
         pluginManager.registerEvents(new EntityChangeBlockListener(this), this);
+        pluginManager.registerEvents(new EntityDamageByEntityListener(this), this);
         pluginManager.registerEvents(new EntityDamageListener(this), this);
         pluginManager.registerEvents(new FoodLevelChangeListener(this), this);
         pluginManager.registerEvents(new HangingBreakListener(this), this);
@@ -118,19 +131,22 @@ public final class Lobby extends JavaPlugin {
         pluginManager.registerEvents(new PlayerBedEnterListener(this), this);
         pluginManager.registerEvents(new PlayerBucketEmptyListener(this), this);
         pluginManager.registerEvents(new PlayerBucketFillListener(this), this);
+        pluginManager.registerEvents(new PlayerDeathListener(this), this);
         pluginManager.registerEvents(new PlayerDropItemListener(this), this);
-        // interact entity
+        pluginManager.registerEvents(new PlayerInteractEntityListener(this), this);
         pluginManager.registerEvents(new PlayerInteractListener(this), this);
         pluginManager.registerEvents(new PlayerItemHeldListener(this), this);
         pluginManager.registerEvents(new PlayerPickupItemListener(this), this);
         pluginManager.registerEvents(new PlayerJoinListener(this), this);
         pluginManager.registerEvents(new PlayerQuitListener(this), this);
+        pluginManager.registerEvents(new PlayerRespawnListener(this), this);
         pluginManager.registerEvents(new PlayerShearEntityListener(this), this);
         pluginManager.registerEvents(new PlayerSwapHandItemsListener(this), this);
         pluginManager.registerEvents(new PlayerUnleashEntityListener(this), this);
         pluginManager.registerEvents(new WeatherChangeListener(this), this);
 
         pluginManager.registerEvents(new JumpAndRunMoveListener(this), this);
+        pluginManager.registerEvents(new BattleBoxMoveListener(this), this);
 
         getCommand("crash").setExecutor(new CrashCommand(this));
         getCommand("edit").setExecutor(new EditCommand(this));
@@ -138,6 +154,20 @@ public final class Lobby extends JavaPlugin {
         getCommand("setposition").setExecutor(new SetPositionCommand(this));
         getCommand("setupjnr").setExecutor(new SetupJnRCommand(this));
 
+    }
+
+    public void connectToServer(Player player, String serverName) {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(outStream);
+
+        try {
+            out.writeUTF("Connect");
+            out.writeUTF(serverName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        player.sendPluginMessage(this, "BungeeCord", outStream.toByteArray());
     }
 
     public String getPrefix() {
@@ -244,12 +274,20 @@ public final class Lobby extends JavaPlugin {
         return this.databasePlayers;
     }
 
+    public DatabaseDailyReward getDatabaseDailyReward() {
+        return this.databaseDailyReward;
+    }
+
     public LocationExecutor getLocationExecutor() {
         return this.locationExecutor;
     }
 
     public JumpAndRunGame getJumpAndRunGame() {
         return this.jumpAndRunGame;
+    }
+
+    public BattleBoxGame getBattleBoxGame() {
+        return this.battleBoxGame;
     }
 
     public ItemHandler getItemHandler() {

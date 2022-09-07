@@ -59,6 +59,7 @@ public class JumpAndRunGame implements JumpAndRun {
 
                 String timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§aJump'n'Run Zeit §8» §e" + timeString));
+                player.playEffect(getBlockLocations().get(getProcess(player)), Effect.ENDER_SIGNAL, 1);
             }
         });
         this.jumpRunnable.get(player).runTaskTimer(this.plugin, 20, 20);
@@ -141,6 +142,10 @@ public class JumpAndRunGame implements JumpAndRun {
             });
         }
 
+        if(this.plugin.getLocationExecutor().doesLocationExists("RespawnJumpAndRun")) {
+            player.teleport(this.plugin.getLocationExecutor().getLocation("RespawnJumpAndRun"));
+        }
+
         this.jumpCount.remove(player);
         this.jumpRunnable.get(player).cancel();
         this.jumpRunnable.remove(player);
@@ -193,6 +198,7 @@ public class JumpAndRunGame implements JumpAndRun {
 
         Bukkit.getWorld(nextLocation.getWorld().getName()).setType(nextLocation, Material.SPRUCE_PLANKS);
         Bukkit.getWorld(nextLocation.getWorld().getName()).spawnParticle(Particle.FLASH, nextLocation, 1);
+        Bukkit.getWorld(nextLocation.getWorld().getName()).getChunkAt(nextLocation);
     }
 
     @Override
@@ -208,7 +214,12 @@ public class JumpAndRunGame implements JumpAndRun {
                         inUse.set(true);
                     }
 
+                    if(this.isPlayerNearToLocation(players, getBlockLocations().get(getProcess(player) - 2))) {
+                        inUse.set(true);
+                    }
+
                 }
+
             }
         });
 
@@ -235,7 +246,12 @@ public class JumpAndRunGame implements JumpAndRun {
                         inUse.set(true);
                     }
 
+                    if(this.isPlayerNearToLocation(players, getBlockLocations().get(getProcess(player) - 1))) {
+                        inUse.set(true);
+                    }
+
                 }
+
             }
         });
 
@@ -262,6 +278,10 @@ public class JumpAndRunGame implements JumpAndRun {
                         inUse.set(true);
                     }
 
+                    if(this.isPlayerNearToLocation(players, getBlockLocations().get(getProcess(player)))) {
+                        inUse.set(true);
+                    }
+
                 }
             }
         });
@@ -274,6 +294,18 @@ public class JumpAndRunGame implements JumpAndRun {
             }
         }
 
+    }
+
+    private boolean isPlayerNearToLocation(Player player, Location location) {
+        final Location playerLocation = player.getLocation();
+
+        final double distance = playerLocation.distance(location);
+
+        if(distance <= 2.5) {
+            return true;
+        }
+
+        return false;
     }
 
 }

@@ -1,2 +1,32 @@
-Secrets
 Achievments
+TOP3-Coins Wand
+
+
+
+
+Positionen:
+  Spawn
+  SpawnHologram (holo)
+  JumpAndRun
+  RespawnJumpAndRun
+  StartJumpAndRun (holo)
+  ZielJumpAndRun (holo)
+  BattleBox1
+  BattleBox2
+  BattleBoxRespawn
+  BattleBoxHologram (holo)
+  TopPlayersHologram (holo)
+
+
+
+
+
+
+
+public UUID generateUUID() {
+long mostSigBits = System.currentTimeMillis();
+while (!uuidInUse.add(mostSigBits)) {
+mostSigBits = this.random.nextLong();
+}
+return new UUID(mostSigBits, 0);
+}

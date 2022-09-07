@@ -12,7 +12,11 @@ public record EntityDamageListener(Lobby plugin) implements Listener {
     public void onEntityDamageEvent(EntityDamageEvent event) {
 
         if(event.getEntity() instanceof Player player) {
-            event.setCancelled(true);
+
+            if(!this.plugin.getBattleBoxGame().isInBox(player)) {
+                event.setCancelled(true);
+            }
+
         }
 
     }

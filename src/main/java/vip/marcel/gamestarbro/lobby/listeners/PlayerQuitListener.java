@@ -21,6 +21,8 @@ public record PlayerQuitListener(Lobby plugin) implements Listener {
             this.plugin.getJumpAndRunGame().failJumping(player);
         }
 
+        this.plugin.getBattleBoxGame().leaveBox(player);
+
     }
 
 }

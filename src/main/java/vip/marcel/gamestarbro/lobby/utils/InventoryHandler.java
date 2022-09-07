@@ -9,13 +9,18 @@ public class InventoryHandler {
 
     private Lobby plugin;
 
-    private Inventory navigator;
+    private Inventory navigator, loginStreak, dailyReward;
 
     public InventoryHandler(Lobby plugin) {
         this.plugin = plugin;
 
         this.navigator = Bukkit.createInventory(null, 54, "§8» §aNavigator");
+        this.loginStreak = Bukkit.createInventory(null, 27, "§8» §dLogin- Streak");
+        this.dailyReward = Bukkit.createInventory(null, 27, "§8» §bTägliche Belohnung");
+
         this.fillNavigator();
+        this.fillLoginStreak();
+        this.fillDailyReward();
     }
 
     private void fillNavigator() {
@@ -70,8 +75,60 @@ public class InventoryHandler {
                 .build());
     }
 
+    private void fillLoginStreak() {
+
+        for(int i = 0; i < this.loginStreak.getSize(); i++) {
+            this.loginStreak.setItem(i, this.plugin.item(Material.GRAY_STAINED_GLASS_PANE).setNoName().build());
+        }
+
+        this.loginStreak.setItem(0, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(1, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(9, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.loginStreak.setItem(8, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(7, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(17, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.loginStreak.setItem(18, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(19, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.loginStreak.setItem(26, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.loginStreak.setItem(25, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+    }
+
+    private void fillDailyReward() {
+
+        for(int i = 0; i < this.dailyReward.getSize(); i++) {
+            this.dailyReward.setItem(i, this.plugin.item(Material.GRAY_STAINED_GLASS_PANE).setNoName().build());
+        }
+
+        this.dailyReward.setItem(0, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(1, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(9, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.dailyReward.setItem(8, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(7, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(17, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.dailyReward.setItem(18, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(19, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+        this.dailyReward.setItem(26, this.plugin.item(Material.ORANGE_STAINED_GLASS_PANE).setNoName().build());
+        this.dailyReward.setItem(25, this.plugin.item(Material.YELLOW_STAINED_GLASS_PANE).setNoName().build());
+
+    }
+
     public Inventory getNavigator() {
         return this.navigator;
+    }
+
+    public Inventory getLoginStreak() {
+        return this.loginStreak;
+    }
+
+    public Inventory getDailyReward() {
+        return this.dailyReward;
     }
 
 }

@@ -39,6 +39,10 @@
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
+        <repository>
+            <id>ngloader-repo</id>
+            <url>https://nexus.wuffy.eu/repository/maven-releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -60,6 +64,12 @@
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.ngloader</groupId>
+            <artifactId>npcsystem</artifactId>
+            <version>LATEST</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -15,6 +15,10 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         final Player player = event.getPlayer();
 
+        if(player.getInventory().getItemInMainHand().getItemMeta() == null) {
+            return;
+        }
+
         if(this.plugin.getEditMode().contains(player)) {
 
             if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
@@ -67,7 +71,7 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
 
                     if(!hasInteractCooldown(player)) {
                         setupCooldown(player);
-                        player.sendMessage(this.plugin.getGlobalPrefix() + "§7Diese Funktion folgt in den nächsten Tagen.");
+                        player.sendMessage(this.plugin.getGlobalPrefix() + "§7Für diese Funktion wird das Konzept noch entwickelt.");
                         player.playSound(player.getLocation(), Sound.BLOCK_BEEHIVE_SHEAR, 0.5F, 0.5F);
                     }
                 }

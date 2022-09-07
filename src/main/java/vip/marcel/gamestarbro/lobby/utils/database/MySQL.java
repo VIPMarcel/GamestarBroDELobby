@@ -41,6 +41,12 @@ public class MySQL {
                 statement.close();
             }
 
+            {
+                PreparedStatement statement = this.connection.prepareStatement("CREATE TABLE IF NOT EXISTS DailyReward(id INT AUTO_INCREMENT PRIMARY KEY, UUID TEXT, TimeStamp TEXT)");
+                statement.executeUpdate();
+                statement.close();
+            }
+
         } catch(SQLException e) {
             e.printStackTrace();
         }
