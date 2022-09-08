@@ -10,13 +10,21 @@ public record ItemHandler(Lobby plugin) {
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
 
-        player.getInventory().setItem(2, this.plugin.item(Material.RECOVERY_COMPASS)
-                .setDisplayname("§8» §aNavigator")
+        player.getInventory().setItem(1, this.plugin.item(Material.RECOVERY_COMPASS)
+                .setDisplayname("§8» §aNavigator §8┃ §7Unsere Spielmodies")
                 .setLore("§8► §7Teleportiere dich zu unseren Spielmodies.")
                 .build());
 
-        player.getInventory().setItem(6, this.plugin.item(Material.TOTEM_OF_UNDYING)
-                .setDisplayname("§8» §cExtras")
+        player.getInventory().setItem(4, this.plugin.item(Material.SHEARS)
+                .setDisplayname("§8» §bChallanger §8┃ §7Spieler herausfordern")
+                .setLore("§8► §7Fordere andere Spieler heraus.",
+                        " ",
+                        "§8► §eRechtsklick §7auf einen Spieler",
+                        "§8► §eLinksklick §7zum deaktivieren.")
+                .build());
+
+        player.getInventory().setItem(7, this.plugin.item(Material.TOTEM_OF_UNDYING)
+                .setDisplayname("§8» §cExtras §8┃ §7Gadgets")
                 .setLore("§8► §7Benutze coole Extras und zeige anderen Spielern, wer der Boss ist.")
                 .build());
     }

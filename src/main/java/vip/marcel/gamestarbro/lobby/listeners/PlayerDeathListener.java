@@ -28,10 +28,18 @@ public record PlayerDeathListener(Lobby plugin) implements Listener {
             }, 5);
 
             player.playSound(player.getLocation(), Sound.ENTITY_DONKEY_DEATH, 10F, 10F);
+
+            if(killer == null) {
+                player.sendMessage(this.plugin.getBattleBoxGame().getPrefix() + "Du bist gestorben.");
+                return;
+            }
+
             killer.playSound(player.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 10F, 10F);
 
             this.plugin.getBattleBoxGame().addKill(killer);
             this.plugin.getBattleBoxGame().announceKillStreak(killer);
+
+            killer.setHealth(20);
 
             CompletableFuture.runAsync(() -> {
                this.plugin.getDatabasePlayers().setCoins(killer.getUniqueId(), this.plugin.getDatabasePlayers().getCoins(killer.getUniqueId()) + 5);

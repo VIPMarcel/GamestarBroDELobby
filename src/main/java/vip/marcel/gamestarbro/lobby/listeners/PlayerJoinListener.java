@@ -36,6 +36,7 @@ public record PlayerJoinListener(Lobby plugin) implements Listener {
         player.setCollidable(false);
         player.setFireTicks(0);
         player.setFreezeTicks(0);
+        player.setWalkSpeed(0.2F);
 
         if(this.plugin.getLocationExecutor().doesLocationExists("Spawn")) {
             player.teleport(this.plugin.getLocationExecutor().getLocation("Spawn"));
@@ -85,12 +86,6 @@ public record PlayerJoinListener(Lobby plugin) implements Listener {
                     .showHologramForPlayer(player);
         }
 
-        if(this.plugin.getLocationExecutor().doesLocationExists("TopPlayersHologram")) {
-            this.plugin.hologram(this.plugin.getLocationExecutor().getLocation("TopPlayersHologram"),
-                            "§8§l┃ §aTOP §e#3 §7Spieler §8§l┃")
-                    .showHologramForPlayer(player);
-        }
-
         final AtomicLong timeStamp = new AtomicLong();
         final AtomicInteger playerStreak = new AtomicInteger(0);
         final AtomicBoolean alreadyCollected = new AtomicBoolean(true);
@@ -123,6 +118,10 @@ public record PlayerJoinListener(Lobby plugin) implements Listener {
         });
 
         player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(100D);
+
+        /*NPCSystem npcSystem = Objects.requireNonNull(Bukkit.getServicesManager().getRegistration(NPCSystem.class)).getProvider();
+        NPCPlayer npc = new NPCPlayer(npcSystem.getDefaultRegistry(), "VIPMarcel", this.plugin.getLocationExecutor().getLocation("Spawn"));
+        npc.create();*/
 
         this.plugin.getItemHandler().giveItemsToPlayer(player);
     }

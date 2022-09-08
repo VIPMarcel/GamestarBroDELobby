@@ -138,7 +138,7 @@ public class JumpAndRunGame implements JumpAndRun {
             CompletableFuture.runAsync(() -> {
                 this.plugin.getDatabasePlayers().setCoins(player.getUniqueId(), this.plugin.getDatabasePlayers().getCoins(player.getUniqueId()) + coins);
             }).thenAccept(unused -> {
-                player.sendMessage(this.prefix + "Du hast §e" + coins + " Coins §7erhalten.");
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§aJump'n'Run §8» §a+§e" + coins + " Coins"));
             });
         }
 

@@ -12,10 +12,13 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import vip.marcel.gamestarbro.lobby.Lobby;
+import vip.marcel.gamestarbro.lobby.utils.challanger.ChallangerGameType;
+import vip.marcel.gamestarbro.lobby.utils.challanger.games.HideAndSeekGame;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -377,6 +380,87 @@ public record InventoryClickListener(Lobby plugin) implements Listener {
 
                 if(event.getCurrentItem().getType().equals(Material.MINECART)) {
                     player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+                    player.closeInventory();
+                }
+
+            }
+
+            if(event.getView().getTitle().equalsIgnoreCase("§8» §bChallanger")) {
+                event.setCancelled(true);
+
+                if(event.getCurrentItem().getType().equals(Material.GREEN_TERRACOTTA)) {
+                    Player target = null;
+                    for (Map.Entry<Player, Player> challangerEntry : this.plugin.getChallangerInteracted().entrySet()) {
+                        if(challangerEntry.getValue().equals(player)) {
+                            target = challangerEntry.getKey();
+                        }
+                    }
+
+                    if(target == null) {
+                        player.sendMessage("§8§l┃ §bChallanger §8► §c" + "Dein Gegner hat den Server verlassen!");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+                        player.closeInventory();
+                        return;
+                    }
+
+                    switch (this.plugin.getChallangerGameType().get(target)) {
+                        case HIDE_AND_SEEK -> {
+                            final HideAndSeekGame hideGame = new HideAndSeekGame(this.plugin, target, player);
+                            hideGame.start();
+                        }
+                        default -> {
+                        }
+                    }
+
+                    this.plugin.getChallanger().remove(target);
+                    this.plugin.getChallangerInteracted().remove(target);
+                    this.plugin.getChallangerGameType().remove(target);
+
+                    player.closeInventory();
+                }
+
+                if(event.getCurrentItem().getType().equals(Material.RED_TERRACOTTA)) {
+                    Player target = null;
+                    for (Map.Entry<Player, Player> challangerEntry : this.plugin.getChallangerInteracted().entrySet()) {
+                        if(challangerEntry.getValue().equals(player)) {
+                            target = challangerEntry.getKey();
+                        }
+                    }
+
+                    if(target != null) {
+                        target.sendMessage("§8§l┃ §bChallanger §8► §c" + "Die Herausforderung wurde abgelehnt");
+                        target.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+                    }
+
+                    player.sendMessage("§8§l┃ §bChallanger §8► §c" + "Die Herausforderung wurde abgelehnt");
+                    player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+
+                    this.plugin.getChallanger().remove(target);
+                    this.plugin.getChallangerInteracted().remove(target);
+                    this.plugin.getChallangerGameType().remove(target);
+
+                    player.closeInventory();
+                }
+
+                if(event.getCurrentItem().getType().equals(Material.CARVED_PUMPKIN)) {
+                    final Player target = this.plugin.getChallangerInteracted().get(player);
+
+                    if(target == null) {
+                        player.sendMessage("§8§l┃ §bChallanger §8► §c" + "Dein Gegner hat den Server verlassen!");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+                        player.closeInventory();
+                        return;
+                    }
+
+                    this.plugin.getChallanger().put(player, target);
+                    this.plugin.getChallangerGameType().put(player, ChallangerGameType.HIDE_AND_SEEK);
+
+                    player.sendMessage("§8§l┃ §bChallanger §8► §7" + "Du hast §e" + target.getName() + " §7zu §bHide'n'Seek §7herausgefordert.");
+                    target.sendMessage("§8§l┃ §bChallanger §8► §7" + "Du wurdest von §e" + player.getName() + " §7zu §bHide'n'Seek §7herausgefordert.");
+
+                    target.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 0.5F, 0.5F);
+                    player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 0.5F, 0.5F);
+
                     player.closeInventory();
                 }
 

@@ -1,6 +1,7 @@
 package vip.marcel.gamestarbro.lobby.listeners;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +15,10 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
     @EventHandler
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         final Player player = event.getPlayer();
+
+        if(!(this.plugin.getEditMode().contains(player) && player.getGameMode().equals(GameMode.CREATIVE))) {
+            event.setCancelled(true);
+        }
 
         if(player.getInventory().getItemInMainHand().getItemMeta() == null) {
             return;
@@ -55,7 +60,7 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
 
             if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_AIR)) {
 
-                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §aNavigator")) {
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §aNavigator §8┃ §7Unsere Spielmodies")) {
                     event.setCancelled(true);
 
                     if(!hasInteractCooldown(player)) {
@@ -66,7 +71,7 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
 
                 }
 
-                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §cExtras")) {
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §cExtras §8┃ §7Gadgets")) {
                     event.setCancelled(true);
 
                     if(!hasInteractCooldown(player)) {
@@ -74,6 +79,25 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
                         player.sendMessage(this.plugin.getGlobalPrefix() + "§7Für diese Funktion wird das Konzept noch entwickelt.");
                         player.playSound(player.getLocation(), Sound.BLOCK_BEEHIVE_SHEAR, 0.5F, 0.5F);
                     }
+                }
+
+            }
+
+            if(event.getAction().equals(Action.LEFT_CLICK_BLOCK) || event.getAction().equals(Action.LEFT_CLICK_AIR)) {
+
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §bChallanger §8┃ §7Spieler herausfordern")) {
+                    event.setCancelled(true);
+
+                    if(this.plugin.getChallangerToggled().contains(player)) {
+                        this.plugin.getChallangerToggled().remove(player);
+                        player.sendMessage("§8§l┃ §bChallanger §8► §7" + "§aDu empfängst nun wieder Herausforderungen.");
+                        player.playSound(player.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 0.25F, 0.25F);
+                    } else {
+                        this.plugin.getChallangerToggled().add(player);
+                        player.sendMessage("§8§l┃ §bChallanger §8► §7" + "§cDu empfängst nun keine Herausforderungen mehr.");
+                        player.playSound(player.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 0.5F, 0.5F);
+                    }
+
                 }
 
             }
@@ -93,6 +117,5 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
             this.plugin.getInteractCooldown().remove(player);
         }, 10);
     }
-
 
 }

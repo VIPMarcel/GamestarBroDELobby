@@ -16,6 +16,7 @@ import vip.marcel.gamestarbro.lobby.utils.battlebox.BattleBoxGame;
 import vip.marcel.gamestarbro.lobby.utils.battlebox.BattleBoxMoveListener;
 import vip.marcel.gamestarbro.lobby.utils.builders.HologramBuilder;
 import vip.marcel.gamestarbro.lobby.utils.builders.ItemBuilder;
+import vip.marcel.gamestarbro.lobby.utils.challanger.ChallangerGameType;
 import vip.marcel.gamestarbro.lobby.utils.colorflowmessage.ColorFlowMessageBuilder;
 import vip.marcel.gamestarbro.lobby.utils.config.DatabaseConfiguration;
 import vip.marcel.gamestarbro.lobby.utils.config.LocationConfiguration;
@@ -42,9 +43,11 @@ public final class Lobby extends JavaPlugin {
     private final String noPermissions = "§cDu hast keinen Zugriff auf diesen Befehl.";
     private final String unknownCommand = "§cDieser Befehl existiert nicht.";
 
-    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown;
+    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown, challangerToggled;
 
     private Map<Player, Integer> setupJnR;
+    private Map<Player, Player> challanger, challangerInteracted;
+    private Map<Player, ChallangerGameType> challangerGameType;
 
     private UUIDFetcher uuidFetcher;
     private ReflectionUtil reflectionUtil;
@@ -74,6 +77,7 @@ public final class Lobby extends JavaPlugin {
         Bukkit.getServer().getScheduler().runTaskTimer(this, () -> {
             this.uuidFetcher.clearCache();
         }, 12000, 12000);
+
     }
 
     @Override
@@ -86,8 +90,12 @@ public final class Lobby extends JavaPlugin {
         this.flyMode = Lists.newArrayList();
         this.setupJnRCooldown = Lists.newArrayList();
         this.interactCooldown = Lists.newArrayList();
+        this.challangerToggled = Lists.newArrayList();
 
         this.setupJnR = Maps.newHashMap();
+        this.challanger = Maps.newHashMap();
+        this.challangerInteracted = Maps.newHashMap();
+        this.challangerGameType = Maps.newHashMap();
 
         this.uuidFetcher = new UUIDFetcher(this);
         this.reflectionUtil = new ReflectionUtil(this);
@@ -242,8 +250,24 @@ public final class Lobby extends JavaPlugin {
         return this.interactCooldown;
     }
 
+    public List<Player> getChallangerToggled() {
+        return this.challangerToggled;
+    }
+
     public Map<Player, Integer> getSetupJnR() {
         return this.setupJnR;
+    }
+
+    public Map<Player, Player> getChallanger() {
+        return this.challanger;
+    }
+
+    public Map<Player, Player> getChallangerInteracted() {
+        return this.challangerInteracted;
+    }
+
+    public Map<Player, ChallangerGameType> getChallangerGameType() {
+        return this.challangerGameType;
     }
 
     public UUIDFetcher getUUIDFetcher() {
