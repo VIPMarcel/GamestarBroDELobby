@@ -5,6 +5,8 @@ import vip.marcel.gamestarbro.lobby.Lobby;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 public class DatabasePlayers {
@@ -395,6 +397,29 @@ public class DatabasePlayers {
         }
 
         return value == 1;
+    }
+
+    public List<UUID> getTopCoinPlayers(int amount) {
+        amount++;
+        List<UUID> output = new LinkedList<>();
+
+        try {
+            PreparedStatement statement = this.plugin.getMySQL().getConnection().prepareStatement("SELECT * FROM Players ORDER BY Coins DESC LIMIT ?");
+            statement.setInt(1, amount);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while(resultSet.next()) {
+                output.add(UUID.fromString(resultSet.getString("UUID")));
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch(SQLException e) {
+            e.printStackTrace();
+        }
+
+        return output;
     }
 
 }

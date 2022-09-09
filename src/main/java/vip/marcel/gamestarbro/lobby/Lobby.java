@@ -29,6 +29,7 @@ import vip.marcel.gamestarbro.lobby.utils.locations.LocationExecutor;
 import vip.marcel.gamestarbro.lobby.utils.mojang.ReflectionUtil;
 import vip.marcel.gamestarbro.lobby.utils.mojang.UUIDFetcher;
 import vip.marcel.gamestarbro.lobby.utils.placeholders.NetworkExpansions;
+import vip.marcel.gamestarbro.lobby.utils.runnables.UpdateTopPlayersWallRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -43,9 +44,9 @@ public final class Lobby extends JavaPlugin {
     private final String noPermissions = "§cDu hast keinen Zugriff auf diesen Befehl.";
     private final String unknownCommand = "§cDieser Befehl existiert nicht.";
 
-    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown, challangerToggled;
+    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown, challangerToggled, setupPlayerWallCooldown;
 
-    private Map<Player, Integer> setupJnR;
+    private Map<Player, Integer> setupJnR, setupPlayerWall;
     private Map<Player, Player> challanger, challangerInteracted;
     private Map<Player, ChallangerGameType> challangerGameType;
 
@@ -91,8 +92,10 @@ public final class Lobby extends JavaPlugin {
         this.setupJnRCooldown = Lists.newArrayList();
         this.interactCooldown = Lists.newArrayList();
         this.challangerToggled = Lists.newArrayList();
+        this.setupPlayerWallCooldown = Lists.newArrayList();
 
         this.setupJnR = Maps.newHashMap();
+        this.setupPlayerWall = Maps.newHashMap();
         this.challanger = Maps.newHashMap();
         this.challangerInteracted = Maps.newHashMap();
         this.challangerGameType = Maps.newHashMap();
@@ -161,7 +164,10 @@ public final class Lobby extends JavaPlugin {
         getCommand("fly").setExecutor(new FlyCommand(this));
         getCommand("setposition").setExecutor(new SetPositionCommand(this));
         getCommand("setupjnr").setExecutor(new SetupJnRCommand(this));
+        getCommand("setuptopwall").setExecutor(new SetupTopWallCommand(this));
+        getCommand("updateplayerwall").setExecutor(new UpdatePlayerWallCommand(this));
 
+        new UpdateTopPlayersWallRunnable(this).runTaskTimer(this, 20, (20 * 60 * 10));
     }
 
     public void connectToServer(Player player, String serverName) {
@@ -254,8 +260,16 @@ public final class Lobby extends JavaPlugin {
         return this.challangerToggled;
     }
 
+    public List<Player> getSetupPlayerWallCooldown() {
+        return this.setupPlayerWallCooldown;
+    }
+
     public Map<Player, Integer> getSetupJnR() {
         return this.setupJnR;
+    }
+
+    public Map<Player, Integer> getSetupPlayerWall() {
+        return this.setupPlayerWall;
     }
 
     public Map<Player, Player> getChallanger() {

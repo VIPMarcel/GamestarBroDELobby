@@ -24,3 +24,7 @@ commands:
       - setpos
   setupjnr:
     description: setup the jump and run
+  setuptopwall:
+    description: setup the top 3 players wall
+  updateplayerwall:
+    description: force update the top 3 players wall

@@ -53,6 +53,34 @@ public record PlayerInteractListener(Lobby plugin) implements Listener {
                     }, 20);
 
                 }
+
+                if(player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§8» §7Top Player Wall §8| §aBlöcke auswählen")) {
+
+                    if(this.plugin.getSetupPlayerWallCooldown().contains(player)) {
+                        return;
+                    }
+
+                    if(!this.plugin.getSetupPlayerWall().containsKey(player)) {
+                        this.plugin.getSetupPlayerWall().put(player, 1);
+                    }
+
+                    final Integer blockNumber = this.plugin.getSetupPlayerWall().get(player);
+
+                    this.plugin.getLocationExecutor().saveLocation("TopPlayers." + blockNumber, event.getClickedBlock().getLocation());
+
+                    player.sendMessage("§8§l┃ §6TopPlayerWall §8► §7" + "§7Block §e" + blockNumber + " §7wurde gespeichert.");
+                    player.playSound(event.getClickedBlock().getLocation(), Sound.BLOCK_CANDLE_BREAK, 0.5F, 0.5F);
+
+                    this.plugin.getSetupPlayerWall().put(player, blockNumber + 1);
+
+                    this.plugin.getSetupPlayerWallCooldown().add(player);
+
+                    Bukkit.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+                        this.plugin.getSetupPlayerWallCooldown().remove(player);
+                    }, 20);
+
+                }
+
             }
 
         } else {

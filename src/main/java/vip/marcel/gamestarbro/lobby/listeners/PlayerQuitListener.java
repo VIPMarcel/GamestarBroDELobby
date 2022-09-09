@@ -20,6 +20,9 @@ public record PlayerQuitListener(Lobby plugin) implements Listener {
         this.plugin.getChallangerInteracted().remove(player);
         this.plugin.getChallangerGameType().remove(player);
 
+        this.plugin.getSetupJnR().remove(player);
+        this.plugin.getSetupPlayerWall().remove(player);
+
         if(this.plugin.getJumpAndRunGame().isJumping(player)) {
             this.plugin.getJumpAndRunGame().failJumping(player);
         }
