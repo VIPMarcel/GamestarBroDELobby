@@ -2,109 +2,177 @@ package vip.marcel.gamestarbro.lobby.utils.challanger.games;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import vip.marcel.gamestarbro.lobby.Lobby;
-import vip.marcel.gamestarbro.lobby.utils.challanger.ChallangerGame;
 
 import java.util.concurrent.CompletableFuture;
 
-public class HideAndSeekGame extends ChallangerGame {
+public class HideAndSeekGame extends BukkitRunnable implements Listener {
+
+    private final Lobby plugin;
+
+    private final String prefix = "§8§l┃ §bHide'n'Seek §8► §7";
+
+    private Player challanger;
+    private Player challanged;
+
+    private int warumUpSeconds;
+    private int gameSeconds;
+
+    private int rewardCoins;
+
+    private boolean isInWarmUp;
+    private boolean isFinished;
 
     public HideAndSeekGame(Lobby plugin, Player challanger, Player challanged) {
-        super(plugin, challanger, challanged);
+        this.plugin = plugin;
+        this.challanger = challanger;
+        this.challanged = challanged;
+
+        this.warumUpSeconds = 10;
+        this.gameSeconds = 60;
+
+        this.rewardCoins = 20;
+
+        this.isInWarmUp = false;
+        this.isFinished = false;
+
+        this.plugin.getIsInChallangeGame().add(challanger);
+        this.plugin.getIsInChallangeGame().add(challanged);
+
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+    }
+
+    public void startGame() {
+        this.isInWarmUp = true;
+
+        this.challanger.sendMessage(this.prefix + "§e" + this.challanged.getName() + " §7hat nun Zeit sich zu verstecken.");
+        this.challanged.sendMessage(this.prefix + "Du bist nun für §e" + this.challanger.getName() + " §7unsichtbar. Verstecke dich!");
+
+        this.challanged.sendTitle("§bHide'n'Seek", "§7Verstecke dich", 10, 20, 10);
+
+        this.challanger.playSound(this.challanger.getLocation(), Sound.ENTITY_WITCH_DRINK, 0.5F, 4.9F);
+        this.challanged.playSound(this.challanged.getLocation(), Sound.ENTITY_WITCH_DRINK, 0.5F, 4.9F);
+
+        this.challanger.hidePlayer(this.plugin, this.challanged);
+
+        this.runTaskTimer(this.plugin, 20, 20);
+    }
+
+    public Player getOpponent(Player player) {
+        if(this.challanger.equals(player)) {
+            return this.challanged;
+        } else {
+            return this.challanger;
+        }
     }
 
     @Override
-    public void setupGame() {
-        this.getGame().setName("Hide'n'Seek");
-        this.getGame().setDescription("Finde deinen Gegener in der Lobby.");
-        this.getGame().setGamePrefix("§8§l┃ §bHide'n'Seek §8► §7");
+    public void run() {
 
-        this.getGame().setWarmUpSeconds(10);
-        this.getGame().setGameSeconds(60);
+        if(this.challanger == null | this.challanged == null) {
+            this.cancel();
+        }
 
-        this.getGame().setRewardCoins(20);
+        if(this.isFinished) {
+            this.cancel();
+        }
+
+        if(this.warumUpSeconds != -1) {
+
+            if(this.warumUpSeconds > 0) {
+                this.onWarmUpTick();
+            }
+
+            if(this.warumUpSeconds == 0) {
+                this.isInWarmUp = false;
+                this.onWarmUpEnd();
+            }
+
+            this.warumUpSeconds--;
+        }
+
+        if(this.warumUpSeconds == -1) {
+            if(this.gameSeconds > 0) {
+                this.onGameTick();
+            } else {
+                this.timeOutGame();
+                this.cancel();
+            }
+            this.gameSeconds--;
+        }
+
     }
 
-    @Override
-    public void onGameStart() {
-        this.getGame().getChallanger().sendMessage(this.getGame().getGamePrefix() + "§e" + this.getGame().getChallanged().getName() + " §7hat nun Zeit sich zu verstecken.");
-        this.getGame().getChallanged().sendMessage(this.getGame().getGamePrefix() + "Du bist nun für §e" + this.getGame().getChallanger().getName() + " §7unsichtbar. Verstecke dich!");
-
-        this.getGame().getChallanged().sendTitle("§bHide'n'Seek", "§7Verstecke dich", 10, 20, 10);
-
-        this.getGame().getChallanger().playSound(this.getGame().getChallanger().getLocation(), Sound.ENTITY_WITCH_DRINK, 0.5F, 4.9F);
-        this.getGame().getChallanged().playSound(this.getGame().getChallanged().getLocation(), Sound.ENTITY_WITCH_DRINK, 0.5F, 4.9F);
-
-        this.getGame().getChallanger().hidePlayer(this.getPlugin(), this.getGame().getChallanged());
-    }
-
-    @Override
-    public void timeOutGame() {
-        this.wonGame(this.getGame().getChallanged());
-    }
-
-    @Override
-    public void wonGame(Player winner) {
+    private void wonGame(Player winner) {
         final Player looser = getOpponent(winner);
 
-        this.getGame().setFinished(true);
+        this.isFinished = true;
 
         CompletableFuture.runAsync(() -> {
-            getPlugin().getDatabasePlayers().setCoins(winner.getUniqueId(), getPlugin().getDatabasePlayers().getCoins(winner.getUniqueId()) + this.getGame().getRewardCoins());
+            this.plugin.getDatabasePlayers().setCoins(winner.getUniqueId(), this.plugin.getDatabasePlayers().getCoins(winner.getUniqueId()) + this.rewardCoins);
         }).thenAccept(unused -> {
-            winner.sendTitle("§b" + this.getGame().getName(), "§a+ §e" + this.getGame().getRewardCoins() + " Coins", 10, 15, 10);
+            winner.sendTitle("§bHide'n'Seek", "§a+ §e" + this.rewardCoins + " Coins", 10, 15, 10);
         });
 
-        looser.sendMessage(this.getGame().getGamePrefix() + "Du hast gegen §e" + winner.getName() + " §7verloren.");
-        winner.sendMessage(this.getGame().getGamePrefix() + "Du hast gegen §e" + looser.getName() + " §7gewonnen.");
+        this.plugin.getIsInChallangeGame().remove(challanger);
+        this.plugin.getIsInChallangeGame().remove(challanged);
+
+        looser.sendMessage(this.prefix + "Du hast gegen §e" + winner.getName() + " §7verloren.");
+        winner.sendMessage(this.prefix + "Du hast gegen §e" + looser.getName() + " §7gewonnen.");
 
         looser.playSound(looser.getLocation(), Sound.ENTITY_DONKEY_DEATH, 0.5F, 4.9F);
         winner.playSound(winner.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 10F, 10F);
     }
 
-    @Override
-    public void onWarmUpTick() {
-        this.getGame().getChallanger().playSound(this.getGame().getChallanger().getLocation(), Sound.BLOCK_GLASS_STEP, 0.5F, 4.9F);
-        this.getGame().getChallanged().playSound(this.getGame().getChallanged().getLocation(), Sound.BLOCK_GLASS_STEP, 0.5F, 4.9F);
-
-        this.getGame().getChallanger().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §cWarmUp §8» §e" + this.getGame().getWarmUpSeconds()));
-        this.getGame().getChallanged().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §cWarmUp §8» §e" + this.getGame().getWarmUpSeconds()));
+    private void timeOutGame() {
+        this.wonGame(this.challanged);
     }
 
-    @Override
-    public void onGameTick() {
+    private void onWarmUpEnd() {
+        this.isInWarmUp = false;
+        this.challanger.showPlayer(this.plugin, this.challanged);
 
-        if(this.getGame().getGameSeconds() == 10) {
-            this.getGame().getChallanger().playSound(this.getGame().getChallanger().getLocation(), Sound.BLOCK_BARREL_OPEN, 0.5F, 4.9F);
-            this.getGame().getChallanged().playSound(this.getGame().getChallanged().getLocation(), Sound.BLOCK_BARREL_OPEN, 0.5F, 4.9F);
+        this.challanger.sendMessage(this.prefix + "Du siehst §e" + this.challanged.getName() + " §7nun wieder.");
+        this.challanged.sendMessage(this.prefix + "§aDu bist nun sichtbar..");
+
+        this.challanger.playSound(this.challanger.getLocation(), Sound.BLOCK_DISPENSER_LAUNCH, 0.5F, 4.9F);
+        this.challanged.playSound(this.challanged.getLocation(), Sound.BLOCK_DISPENSER_LAUNCH, 0.5F, 4.9F);
+    }
+
+    private void onGameTick() {
+        if(this.gameSeconds == 10) {
+            this.challanger.playSound(this.challanger.getLocation(), Sound.BLOCK_BARREL_OPEN, 0.5F, 4.9F);
+            this.challanged.playSound(this.challanged.getLocation(), Sound.BLOCK_BARREL_OPEN, 0.5F, 4.9F);
         }
 
-        this.getGame().getChallanger().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §7endet in §8» §e" + this.getGame().getGameSeconds()));
-        this.getGame().getChallanged().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §7endet in §8» §e" + this.getGame().getGameSeconds()));
-
+        this.challanger.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §7endet in §8» §e" + this.gameSeconds));
+        this.challanged.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §7endet in §8» §e" + this.gameSeconds));
     }
 
-    @Override
-    public void onWarmUpEnd() {
-        this.getGame().getChallanger().showPlayer(getPlugin(), this.getGame().getChallanged());
+    private void onWarmUpTick() {
+        this.challanger.playSound(this.challanger.getLocation(), Sound.BLOCK_GLASS_STEP, 0.5F, 4.9F);
+        this.challanged.playSound(this.challanged.getLocation(), Sound.BLOCK_GLASS_STEP, 0.5F, 4.9F);
 
-        this.getGame().getChallanger().sendMessage(this.getGame().getGamePrefix() + "Du siehst §e" + this.getGame().getChallanged().getName() + " §7nun wieder.");
-        this.getGame().getChallanged().sendMessage(this.getGame().getGamePrefix() + "§aDu bist nun sichtbar..");
-
-        this.getGame().getChallanger().playSound(this.getGame().getChallanger().getLocation(), Sound.BLOCK_DISPENSER_LAUNCH, 0.5F, 4.9F);
-        this.getGame().getChallanged().playSound(this.getGame().getChallanged().getLocation(), Sound.BLOCK_DISPENSER_LAUNCH, 0.5F, 4.9F);
+        this.challanger.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §cWarmUp §8» §e" + this.warumUpSeconds));
+        this.challanged.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§bHide'n'Seek §cWarmUp §8» §e" + this.warumUpSeconds));
     }
 
     @EventHandler
     public void onPlayerQuitEvent(PlayerQuitEvent event) {
         final Player looser = event.getPlayer();
 
-        if(this.getGame().isFinished()) {
+        this.plugin.getIsInChallangeGame().remove(challanger);
+        this.plugin.getIsInChallangeGame().remove(challanged);
+
+        if(this.isFinished) {
             return;
         }
 
@@ -117,16 +185,16 @@ public class HideAndSeekGame extends ChallangerGame {
     public void onPlayerInteractEntityEvent(PlayerInteractEntityEvent event) {
         final Player winner = event.getPlayer();
 
-        if(this.getGame().isFinished()) {
+        if(this.isFinished) {
             return;
         }
 
-        if(this.isInWarmUp()) {
+        if(this.isInWarmUp) {
             return;
         }
 
         if(event.getRightClicked() instanceof Player looser) {
-            if(this.getGame().getChallanger().equals(winner) && this.getGame().getChallanged().equals(looser)) {
+            if(this.challanger.equals(winner) && this.challanged.equals(looser)) {
                 wonGame(winner);
             }
         }

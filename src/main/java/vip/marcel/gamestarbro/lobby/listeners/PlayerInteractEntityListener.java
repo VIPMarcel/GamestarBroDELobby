@@ -31,6 +31,16 @@ public record PlayerInteractEntityListener(Lobby plugin) implements Listener {
 
                     setupCooldown(player);
 
+                    if(this.plugin.getIsInChallangeGame().contains(player)) {
+                        player.sendMessage("§8§l┃ §bChallanger §8► §7" + "§cDu befindest dich bereits in einer Challange.");
+                        return;
+                    }
+
+                    if(this.plugin.getIsInChallangeGame().contains(target)) {
+                        player.sendMessage("§8§l┃ §bChallanger §8► §e" + target.getName() + "§c befindest dich bereits in einer Challange.");
+                        return;
+                    }
+
                     for(int i = 0; i < challanger.getSize(); i++) {
                         challanger.setItem(i, this.plugin.item(Material.GRAY_STAINED_GLASS_PANE).setNoName().build());
                     }

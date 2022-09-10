@@ -319,6 +319,14 @@ public record InventoryClickListener(Lobby plugin) implements Listener {
                 }
 
                 if(event.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§aSurvival")) {
+
+                    if(this.plugin.getToggledGames().contains("survival")) {
+                        player.sendMessage(this.plugin.getGlobalPrefix() + "§cDer Spielmodus §eSurvival §cist momentan deaktiviert.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5F, 0.5F);
+                        player.closeInventory();
+                        return;
+                    }
+
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 10F, 10F);
                     this.plugin.connectToServer(player, "Survival");
                 }
@@ -405,8 +413,8 @@ public record InventoryClickListener(Lobby plugin) implements Listener {
 
                     switch (this.plugin.getChallangerGameType().get(target)) {
                         case HIDE_AND_SEEK -> {
-                            final HideAndSeekGame hideGame = new HideAndSeekGame(this.plugin, target, player);
-                            hideGame.start();
+                            final HideAndSeekGame hideAndSeekGame = new HideAndSeekGame(this.plugin, target, player);
+                            hideAndSeekGame.startGame();
                         }
                         default -> {
                         }

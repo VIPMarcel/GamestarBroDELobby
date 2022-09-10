@@ -28,3 +28,5 @@ commands:
     description: setup the top 3 players wall
   updateplayerwall:
     description: force update the top 3 players wall
+  togglegame:
+    description: set gamemodies in maintenance mode or release them

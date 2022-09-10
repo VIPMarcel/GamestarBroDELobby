@@ -20,14 +20,13 @@ public record PlayerDeathListener(Lobby plugin) implements Listener {
         event.setDeathMessage(null);
         event.setKeepLevel(true);
         event.getDrops().clear();
+        event.setDroppedExp(0);
 
         if(this.plugin.getBattleBoxGame().isInBox(player)) {
             Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
                 player.spigot().respawn();
                 player.teleport(this.plugin.getLocationExecutor().getLocation("BattleBoxRespawn"));
             }, 5);
-
-            player.playSound(player.getLocation(), Sound.ENTITY_DONKEY_DEATH, 10F, 10F);
 
             if(killer == null) {
                 player.sendMessage(this.plugin.getBattleBoxGame().getPrefix() + "Du bist gestorben.");

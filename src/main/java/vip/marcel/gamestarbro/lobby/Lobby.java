@@ -44,7 +44,8 @@ public final class Lobby extends JavaPlugin {
     private final String noPermissions = "§cDu hast keinen Zugriff auf diesen Befehl.";
     private final String unknownCommand = "§cDieser Befehl existiert nicht.";
 
-    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown, challangerToggled, setupPlayerWallCooldown;
+    private List<Player> editMode, flyMode, setupJnRCooldown, interactCooldown, challangerToggled, setupPlayerWallCooldown, isInChallangeGame;
+    private List<String> toggledGames;
 
     private Map<Player, Integer> setupJnR, setupPlayerWall;
     private Map<Player, Player> challanger, challangerInteracted;
@@ -93,6 +94,8 @@ public final class Lobby extends JavaPlugin {
         this.interactCooldown = Lists.newArrayList();
         this.challangerToggled = Lists.newArrayList();
         this.setupPlayerWallCooldown = Lists.newArrayList();
+        this.toggledGames = Lists.newArrayList();
+        this.isInChallangeGame = Lists.newArrayList();
 
         this.setupJnR = Maps.newHashMap();
         this.setupPlayerWall = Maps.newHashMap();
@@ -166,6 +169,7 @@ public final class Lobby extends JavaPlugin {
         getCommand("setupjnr").setExecutor(new SetupJnRCommand(this));
         getCommand("setuptopwall").setExecutor(new SetupTopWallCommand(this));
         getCommand("updateplayerwall").setExecutor(new UpdatePlayerWallCommand(this));
+        getCommand("togglegame").setExecutor(new ToggleGameCommand(this));
 
         new UpdateTopPlayersWallRunnable(this).runTaskTimer(this, 20, (20 * 60 * 10));
     }
@@ -262,6 +266,14 @@ public final class Lobby extends JavaPlugin {
 
     public List<Player> getSetupPlayerWallCooldown() {
         return this.setupPlayerWallCooldown;
+    }
+
+    public List<String> getToggledGames() {
+        return this.toggledGames;
+    }
+
+    public List<Player> getIsInChallangeGame() {
+        return this.isInChallangeGame;
     }
 
     public Map<Player, Integer> getSetupJnR() {
